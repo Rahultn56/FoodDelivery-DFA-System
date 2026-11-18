@@ -367,7 +367,7 @@ $M = (Q, \Sigma, \delta, q_0, F)$
 ### 5. GITHUB REPOSITORY AND VERSION CONTROL
 
 The source code is maintained on GitHub using Git version control:
-- **5.1 Repository Link**: `https://github.com/Rahul-G/FoodDelivery-DFA-System`
+- **5.1 Repository Link**: `https://github.com/Rahultn56/FoodDelivery-DFA-System`
 
 #### 5.2 Git commands used
 ```bash
