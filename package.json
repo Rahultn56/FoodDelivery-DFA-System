@@ -1,0 +1,14 @@
+{
+  "name": "rahul-project1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Online food ordering and delivery tracking system with DFA order validation",
+  "scripts": {
+    "dev": "concurrently -k -n server,client -c green,cyan \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "test": "npm --prefix server test"
+  },
+  "devDependencies": { "concurrently": "^9.1.2" }
+}
