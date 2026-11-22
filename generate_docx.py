@@ -11,7 +11,7 @@ def set_cell_background(cell, fill_hex):
     shd = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{fill_hex}"/>')
     tcPr.append(shd)
 
-def set_cell_margins(cell, top=100, bottom=100, left=150, right=150):
+def set_cell_margins(cell, top=120, bottom=120, left=160, right=160):
     tcPr = cell._tc.get_or_add_tcPr()
     tcMar = parse_xml(f'''
         <w:tcMar {nsdecls("w")}>
@@ -23,7 +23,7 @@ def set_cell_margins(cell, top=100, bottom=100, left=150, right=150):
     ''')
     tcPr.append(tcMar)
 
-def set_table_borders(table, color="CCCCCC", sz="4", val="single"):
+def set_table_borders(table, color="94A3B8", sz="4", val="single"):
     tblPr = table._tbl.tblPr
     borders = parse_xml(f'''
         <w:tblBorders {nsdecls("w")}>
@@ -37,54 +37,67 @@ def set_table_borders(table, color="CCCCCC", sz="4", val="single"):
     ''')
     tblPr.append(borders)
 
+def format_run(run, font_name="Times New Roman", font_size=12, bold=False, italic=False, color_rgb=(15, 23, 42)):
+    run.font.name = font_name
+    run.font.size = Pt(font_size)
+    run.bold = bold
+    run.italic = italic
+    run.font.color.rgb = RGBColor(*color_rgb)
+
+def add_justified_para(doc, text="", space_before=0, space_after=6, line_spacing=1.15):
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p.paragraph_format.space_before = Pt(space_before)
+    p.paragraph_format.space_after = Pt(space_after)
+    p.paragraph_format.line_spacing = line_spacing
+    if text:
+        r = p.add_run(text)
+        format_run(r, font_name="Times New Roman", font_size=12, bold=False)
+    return p
+
 def build_document():
     doc = docx.Document()
 
-    # Page setup - A4
+    # Page setup - Standard A4 with 1-inch margins
     sections = doc.sections
     for section in sections:
         section.page_width = Inches(8.27)
         section.page_height = Inches(11.69)
-        section.top_margin = Inches(0.8)
-        section.bottom_margin = Inches(0.8)
-        section.left_margin = Inches(0.8)
-        section.right_margin = Inches(0.8)
+        section.top_margin = Inches(1.0)
+        section.bottom_margin = Inches(1.0)
+        section.left_margin = Inches(1.0)
+        section.right_margin = Inches(1.0)
 
     # Base style
     normal_style = doc.styles['Normal']
     normal_style.font.name = 'Times New Roman'
-    normal_style.font.size = Pt(11)
-    normal_style.font.color.rgb = RGBColor(17, 24, 39)
+    normal_style.font.size = Pt(12)
+    normal_style.font.color.rgb = RGBColor(15, 23, 42)
 
     # 1. Header (Centered College Banner)
     p_inst = doc.add_paragraph()
     p_inst.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_inst.paragraph_format.space_before = Pt(0)
     p_inst.paragraph_format.space_after = Pt(2)
+    p_inst.paragraph_format.line_spacing = 1.15
     r = p_inst.add_run("VELALAR COLLEGE OF ENGINEERING AND TECHNOLOGY, ERODE - 12\n(AUTONOMOUS)\nDEPARTMENT OF INFORMATION TECHNOLOGY")
-    r.bold = True
-    r.font.size = Pt(13)
-    r.font.color.rgb = RGBColor(30, 58, 138)
+    format_run(r, font_name="Times New Roman", font_size=13, bold=True, color_rgb=(30, 58, 138))
 
     p_ay = doc.add_paragraph()
     p_ay.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_ay.paragraph_format.space_before = Pt(0)
     p_ay.paragraph_format.space_after = Pt(2)
     r = p_ay.add_run("ACADEMIC YEAR: 2026 - 27 (ODD)")
-    r.bold = True
-    r.font.size = Pt(10.5)
-    r.font.color.rgb = RGBColor(71, 85, 105)
+    format_run(r, font_name="Times New Roman", font_size=11.5, bold=True, color_rgb=(71, 85, 105))
 
     p_act = doc.add_paragraph()
     p_act.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_act.paragraph_format.space_before = Pt(0)
+    p_act.paragraph_format.space_before = Pt(2)
     p_act.paragraph_format.space_after = Pt(14)
     r = p_act.add_run("ACTIVITY - Project-Based Assessment")
-    r.bold = True
-    r.font.size = Pt(11.5)
-    r.font.color.rgb = RGBColor(30, 58, 138)
+    format_run(r, font_name="Times New Roman", font_size=12, bold=True, color_rgb=(30, 58, 138))
 
-    # 2. Student & Project Info Table
+    # 2. Student & Project Info Table (Font size: 12 pt, Times New Roman)
     meta_table = doc.add_table(rows=5, cols=4)
     meta_table.alignment = WD_TABLE_ALIGNMENT.CENTER
     set_table_borders(meta_table, "94A3B8", "6")
@@ -100,76 +113,68 @@ def build_document():
     for row_idx, row_content in enumerate(meta_data):
         row = meta_table.rows[row_idx]
         if row_idx in [2, 3, 4]:
-            # Merge col 1, 2, 3
             cell_label = row.cells[0]
             cell_val = row.cells[1]
             cell_val.merge(row.cells[2]).merge(row.cells[3])
             
             cell_label.text = row_content[0][0]
             set_cell_background(cell_label, "F1F5F9")
-            set_cell_margins(cell_label, 120, 120, 150, 150)
-            cell_label.paragraphs[0].runs[0].font.bold = True
-            cell_label.paragraphs[0].runs[0].font.size = Pt(10)
-            cell_label.paragraphs[0].runs[0].font.color.rgb = RGBColor(15, 23, 42)
+            set_cell_margins(cell_label, 120, 120, 160, 160)
+            cell_label.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+            format_run(cell_label.paragraphs[0].runs[0], font_name="Times New Roman", font_size=12, bold=True)
 
             cell_val.text = row_content[1][0]
-            set_cell_margins(cell_val, 120, 120, 150, 150)
-            if row_content[1][1]:
-                cell_val.paragraphs[0].runs[0].font.bold = True
-            cell_val.paragraphs[0].runs[0].font.size = Pt(10)
-            cell_val.paragraphs[0].runs[0].font.color.rgb = RGBColor(15, 23, 42)
+            set_cell_margins(cell_val, 120, 120, 160, 160)
+            cell_val.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            format_run(cell_val.paragraphs[0].runs[0], font_name="Times New Roman", font_size=12, bold=row_content[1][1])
         else:
             for col_idx in range(4):
                 cell = row.cells[col_idx]
                 text, is_bold = row_content[col_idx]
                 cell.text = text
-                set_cell_margins(cell, 120, 120, 150, 150)
+                set_cell_margins(cell, 120, 120, 160, 160)
                 if is_bold:
                     set_cell_background(cell, "F1F5F9")
                 p = cell.paragraphs[0]
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 if p.runs:
-                    p.runs[0].font.bold = is_bold
-                    p.runs[0].font.size = Pt(10)
-                    p.runs[0].font.color.rgb = RGBColor(15, 23, 42)
-
-    doc.add_paragraph().paragraph_format.space_after = Pt(6)
+                    format_run(p.runs[0], font_name="Times New Roman", font_size=12, bold=is_bold)
 
     # Helper for Section Titles
     def add_sec_title(title):
         p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         p.paragraph_format.space_before = Pt(16)
         p.paragraph_format.space_after = Pt(6)
         p.paragraph_format.keep_with_next = True
         r = p.add_run(title)
-        r.bold = True
-        r.font.size = Pt(13)
-        r.font.color.rgb = RGBColor(30, 58, 138)
+        format_run(r, font_name="Times New Roman", font_size=13, bold=True, color_rgb=(30, 58, 138))
         return p
 
     def add_subsec_title(title):
         p = doc.add_paragraph()
-        p.paragraph_format.space_before = Pt(10)
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p.paragraph_format.space_before = Pt(12)
         p.paragraph_format.space_after = Pt(4)
         p.paragraph_format.keep_with_next = True
         r = p.add_run(title)
-        r.bold = True
-        r.font.size = Pt(11.5)
-        r.font.color.rgb = RGBColor(15, 23, 42)
+        format_run(r, font_name="Times New Roman", font_size=12, bold=True, color_rgb=(15, 23, 42))
         return p
 
     # --- SECTION 1 ---
     add_sec_title("1. STATE DIAGRAM")
 
     add_subsec_title("1.1 Introduction")
-    p = doc.add_paragraph(
+    add_justified_para(
+        doc,
         "A Deterministic Finite Automaton (DFA) is used in the Online Food Ordering and Delivery Tracking System "
         "project to model, govern, and strictly validate the complete lifecycle of customer orders. In commercial food delivery "
         "applications, orders must strictly follow an operational sequence: from initial order placement, kitchen staff confirmation, "
         "cooking preparation, packaging, dispatch via courier, to final delivery handover."
     )
-    p.paragraph_format.space_after = Pt(6)
 
-    p = doc.add_paragraph(
+    add_justified_para(
+        doc,
         "The automaton starts from the initial state S0 (Order Created). Whenever authorized actors (customer, kitchen manager, "
         "delivery partner) submit an action, the DFA evaluates the transition function δ(state, action). If the action is legally defined "
         "for the current state, the DFA advances deterministically to the next state. If an undefined action or illegal state jump is "
@@ -177,17 +182,16 @@ def build_document():
         "strictly rejected with mathematical proof. When the order reaches S5 (Delivered) or S6 (Cancelled), it enters a final/accepting state "
         "with zero outgoing transitions, guaranteeing that completed orders cannot be altered."
     )
-    p.paragraph_format.space_after = Pt(10)
 
     add_subsec_title("1.2 States of the DFA")
     states_data = [
         ("S0", "Order Created", "Customer placed food order. Awaiting restaurant acceptance or cancellation.", "Initial State (q0)"),
-        ("S1", "Order Confirmed", "Restaurant verified and accepted order. Assigned to kitchen preparation queue.", "Intermediate State"),
-        ("S2", "Preparation Started", "Chef began cooking ingredients. Cancellation locked to prevent restaurant wastage.", "Intermediate State"),
-        ("S3", "Food Prepared", "Cooking completed; dishes packed in insulated boxes; ready for courier pickup.", "Intermediate State"),
-        ("S4", "Out for Delivery", "Assigned delivery courier picked up package; traveling to customer address.", "Intermediate State"),
-        ("S5", "Delivered", "Package safely handed over to customer. Order lifecycle successfully fulfilled.", "Final / Accepting (F)"),
-        ("S6", "Cancelled", "Order cancelled by customer in S0/S1 or rejected by restaurant. Terminal state.", "Final / Terminal (F)")
+        ("S1", "Order Confirmed", "Restaurant verified and accepted order. Assigned to kitchen queue.", "Intermediate State"),
+        ("S2", "Preparation Started", "Chef began cooking ingredients. Cancellation locked to prevent wastage.", "Intermediate State"),
+        ("S3", "Food Prepared", "Cooking completed; dishes packed in insulated boxes; ready for pickup.", "Intermediate State"),
+        ("S4", "Out for Delivery", "Assigned delivery courier picked up package; traveling to customer.", "Intermediate State"),
+        ("S5", "Delivered", "Package safely handed over to customer. Order successfully fulfilled.", "Final / Accepting (F)"),
+        ("S6", "Cancelled", "Order cancelled by customer in S0/S1 or rejected by restaurant.", "Final / Terminal (F)")
     ]
 
     tbl_states = doc.add_table(rows=1 + len(states_data), cols=4)
@@ -199,10 +203,10 @@ def build_document():
         cell = tbl_states.rows[0].cells[col_idx]
         cell.text = h_text
         set_cell_background(cell, "E2E8F0")
-        set_cell_margins(cell, 100, 100, 120, 120)
+        set_cell_margins(cell, 100, 100, 140, 140)
         p = cell.paragraphs[0]
-        p.runs[0].font.bold = True
-        p.runs[0].font.size = Pt(10)
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        format_run(p.runs[0], font_name="Times New Roman", font_size=12, bold=True)
 
     for row_idx, data_row in enumerate(states_data):
         row = tbl_states.rows[1 + row_idx]
@@ -211,29 +215,28 @@ def build_document():
             cell = row.cells[col_idx]
             cell.text = val
             set_cell_background(cell, bg)
-            set_cell_margins(cell, 80, 80, 120, 120)
+            set_cell_margins(cell, 80, 80, 140, 140)
             p = cell.paragraphs[0]
-            p.runs[0].font.size = Pt(9.5)
-            if col_idx == 0:
-                p.runs[0].font.bold = True
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY if col_idx == 2 else WD_ALIGN_PARAGRAPH.LEFT
+            format_run(p.runs[0], font_name="Times New Roman", font_size=12, bold=(col_idx == 0))
 
-    doc.add_paragraph().paragraph_format.space_after = Pt(6)
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
 
     add_subsec_title("1.3 State Diagram Representation :")
-    p = doc.add_paragraph(
+    add_justified_para(
+        doc,
         "Online Food Ordering & Delivery Tracking – DFA State Diagram\n"
         "The automaton contains seven states. It guarantees deterministic progression along the main fulfillment pipeline "
         "(S0 → S1 → S2 → S3 → S4 → S5) and accepts controlled cancellation branches to S6 only before food preparation starts."
     )
-    p.paragraph_format.space_after = Pt(6)
 
-    # ASCII State diagram in box
+    # ASCII State diagram box
     diag_box = doc.add_table(rows=1, cols=1)
     diag_box.alignment = WD_TABLE_ALIGNMENT.CENTER
     set_table_borders(diag_box, "CBD5E1", "6")
     cell = diag_box.rows[0].cells[0]
     set_cell_background(cell, "F8FAFC")
-    set_cell_margins(cell, 150, 150, 180, 180)
+    set_cell_margins(cell, 140, 140, 160, 160)
     ascii_diag = (
         "       [Start]\n"
         "          │\n"
@@ -256,44 +259,46 @@ def build_document():
     )
     cell.text = ascii_diag
     p = cell.paragraphs[0]
-    p.runs[0].font.name = 'Consolas'
-    p.runs[0].font.size = Pt(8.5)
-    p.runs[0].font.color.rgb = RGBColor(30, 41, 59)
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    format_run(p.runs[0], font_name="Consolas", font_size=8.5, bold=False, color_rgb=(30, 41, 59))
 
     p_cap = doc.add_paragraph()
     p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_cap.paragraph_format.space_before = Pt(4)
     p_cap.paragraph_format.space_after = Pt(8)
     r = p_cap.add_run("Figure 1: Complete 7-state Deterministic Finite Automaton (DFA) state diagram for food ordering & delivery tracking.")
-    r.bold = True
-    r.font.size = Pt(9.5)
-    r.font.color.rgb = RGBColor(71, 85, 105)
+    format_run(r, font_name="Times New Roman", font_size=11, bold=True, italic=True, color_rgb=(71, 85, 105))
 
-    p_desc = doc.add_paragraph(
-        "State Description:\n"
+    p_desc = doc.add_paragraph()
+    p_desc.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_desc.paragraph_format.space_after = Pt(8)
+    r_title = p_desc.add_run("State Description:\n")
+    format_run(r_title, font_name="Times New Roman", font_size=12, bold=True)
+    r_body = p_desc.add_run(
         "• S0 – Initial state (q0); customer placed order; awaiting kitchen confirmation.\n"
-        "• S1 – Order confirmed by restaurant; queued for preparation.\n"
+        "• S1 – Order confirmed by restaurant; queued for kitchen preparation.\n"
         "• S2 – Food preparation started; chef cooking; cancellation locked.\n"
-        "• S3 – Food preparation finished; items inspected and packed.\n"
-        "• S4 – Out for delivery; delivery courier traveling to customer location.\n"
+        "• S3 – Food preparation finished; items inspected and packed in containers.\n"
+        "• S4 – Out for delivery; delivery courier traveling to customer delivery address.\n"
         "• S5 – Delivered; package handed over; order completed successfully (Final State ∈ F).\n"
         "• S6 – Cancelled; order cancelled or rejected before cooking started (Final State ∈ F)."
     )
-    p_desc.paragraph_format.space_after = Pt(10)
+    format_run(r_body, font_name="Times New Roman", font_size=12, bold=False)
 
     add_subsec_title("1.4 Formal Definition of DFA")
-    p = doc.add_paragraph("A Deterministic Finite Automaton is represented by the 5-tuple:")
-    p.paragraph_format.space_after = Pt(4)
+    add_justified_para(doc, "A Deterministic Finite Automaton is represented by the 5-tuple:")
 
     p_form = doc.add_paragraph()
     p_form.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p_form.add_run("M = (Q, Σ, δ, q0, F)")
-    r.bold = True
-    r.font.size = Pt(12)
-    r.font.color.rgb = RGBColor(30, 58, 138)
+    p_form.paragraph_format.space_before = Pt(2)
     p_form.paragraph_format.space_after = Pt(6)
+    r = p_form.add_run("M = (Q, Σ, δ, q0, F)")
+    format_run(r, font_name="Times New Roman", font_size=13, bold=True, color_rgb=(30, 58, 138))
 
-    doc.add_paragraph(
+    p_where = doc.add_paragraph()
+    p_where.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_where.paragraph_format.space_after = Pt(6)
+    r = p_where.add_run(
         "Where:\n"
         "• Q: Finite set of states = {S0, S1, S2, S3, S4, S5, S6}\n"
         "• Σ: Finite input alphabet = {confirm, start_preparation, food_ready, dispatch, deliver, cancel}\n"
@@ -301,20 +306,26 @@ def build_document():
         "• q0: Initial state = S0 (Order Created)\n"
         "• F: Set of final / accepting states = {S5, S6} (S5 = Delivered, S6 = Cancelled)"
     )
+    format_run(r, font_name="Times New Roman", font_size=12, bold=False)
 
-    doc.add_paragraph(
-        "Language Accepted by the Automaton L(M):\n"
+    p_lang = doc.add_paragraph()
+    p_lang.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_lang.paragraph_format.space_after = Pt(12)
+    r_lt = p_lang.add_run("Language Accepted by the Automaton L(M):\n")
+    format_run(r_lt, font_name="Times New Roman", font_size=12, bold=True)
+    r_lb = p_lang.add_run(
         "The DFA accepts any sequence of operational events that terminates in an accepting state F = {S5, S6}:\n"
         "L(M) = { confirm · start_preparation · food_ready · dispatch · deliver,  cancel,  confirm · cancel }"
-    ).paragraph_format.space_after = Pt(14)
+    )
+    format_run(r_lb, font_name="Times New Roman", font_size=12, bold=False)
 
     # --- SECTION 2 ---
     add_sec_title("2. TRANSITION DIAGRAM")
-    p = doc.add_paragraph(
+    add_justified_para(
+        doc,
         "The transition diagram represents the movement of the DFA from one state to another based on incoming "
         "operational events dispatched from the client application."
     )
-    p.paragraph_format.space_after = Pt(6)
 
     add_subsec_title("2.1 Transition Table :")
     transitions_data = [
@@ -338,10 +349,10 @@ def build_document():
         cell = tbl_trans.rows[0].cells[col_idx]
         cell.text = h_text
         set_cell_background(cell, "E2E8F0")
-        set_cell_margins(cell, 100, 100, 120, 120)
+        set_cell_margins(cell, 100, 100, 140, 140)
         p = cell.paragraphs[0]
-        p.runs[0].font.bold = True
-        p.runs[0].font.size = Pt(10)
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        format_run(p.runs[0], font_name="Times New Roman", font_size=12, bold=True)
 
     for row_idx, data_row in enumerate(transitions_data):
         row = tbl_trans.rows[1 + row_idx]
@@ -350,23 +361,26 @@ def build_document():
             cell = row.cells[col_idx]
             cell.text = val
             set_cell_background(cell, bg)
-            set_cell_margins(cell, 80, 80, 120, 120)
+            set_cell_margins(cell, 80, 80, 140, 140)
             p = cell.paragraphs[0]
-            p.runs[0].font.size = Pt(9.5)
-            if col_idx in [0, 2]:
-                p.runs[0].font.bold = True
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY if col_idx == 3 else WD_ALIGN_PARAGRAPH.LEFT
+            format_run(p.runs[0], font_name="Times New Roman", font_size=12, bold=(col_idx in [0, 2]))
 
-    p_spec = doc.add_paragraph(
-        "\nSpecial Conditions:\n"
+    p_spec = doc.add_paragraph()
+    p_spec.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_spec.paragraph_format.space_before = Pt(8)
+    p_spec.paragraph_format.space_after = Pt(10)
+    r_st = p_spec.add_run("Special Conditions:\n")
+    format_run(r_st, font_name="Times New Roman", font_size=12, bold=True)
+    r_sb = p_spec.add_run(
         "• Undefined Transitions: Any transition not explicitly defined above evaluates to ∅ and is rejected by the backend with an HTTP 422 Unprocessable Entity status.\n"
         "• Cancellation Lock: Beyond state S1, the cancel action is strictly undefined (δ(S2, cancel) = ∅), preventing customer cancellation after raw materials have been cooked.\n"
         "• Terminal Invariance: Both S5 and S6 have zero outgoing transitions (δ(S5, σ) = ∅, δ(S6, σ) = ∅), guaranteeing that completed or cancelled orders are immutable."
     )
-    p_spec.paragraph_format.space_after = Pt(10)
+    format_run(r_sb, font_name="Times New Roman", font_size=12, bold=False)
 
     add_subsec_title("2.2 Example of State Transitions :")
-    p = doc.add_paragraph("Consider an order placed by customer Alex Morgan (Order ID #692a4e) progressing from placement to delivery:")
-    p.paragraph_format.space_after = Pt(6)
+    add_justified_para(doc, "Consider an order placed by customer Alex Morgan (Order ID #692a4e) progressing from placement to delivery:")
 
     example_data = [
         ("Initial", "Customer", "Order Placed", "—", "S0", "q0 = S0"),
@@ -386,10 +400,10 @@ def build_document():
         cell = tbl_ex.rows[0].cells[col_idx]
         cell.text = h_text
         set_cell_background(cell, "E2E8F0")
-        set_cell_margins(cell, 100, 100, 100, 100)
+        set_cell_margins(cell, 100, 100, 120, 120)
         p = cell.paragraphs[0]
-        p.runs[0].font.bold = True
-        p.runs[0].font.size = Pt(9.5)
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        format_run(p.runs[0], font_name="Times New Roman", font_size=12, bold=True)
 
     for row_idx, data_row in enumerate(example_data):
         row = tbl_ex.rows[1 + row_idx]
@@ -398,21 +412,21 @@ def build_document():
             cell = row.cells[col_idx]
             cell.text = val
             set_cell_background(cell, bg)
-            set_cell_margins(cell, 80, 80, 100, 100)
+            set_cell_margins(cell, 80, 80, 120, 120)
             p = cell.paragraphs[0]
-            p.runs[0].font.size = Pt(9)
-            if col_idx in [3, 4]:
-                p.runs[0].font.bold = True
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            format_run(p.runs[0], font_name="Times New Roman", font_size=12, bold=(col_idx in [3, 4]))
 
-    doc.add_paragraph(
-        "\nResult: After detecting five sequential valid transitions, the DFA enters accepting state S5, "
-        "and the system confirms successful order delivery."
-    ).paragraph_format.space_after = Pt(14)
+    add_justified_para(
+        doc,
+        "Result: After detecting five sequential valid transitions, the DFA enters accepting state S5, "
+        "and the system confirms successful order delivery.",
+        space_before=6, space_after=12
+    )
 
     # --- CODE SECTION ---
     add_sec_title("CODE:")
-    p = doc.add_paragraph("File Name: orderDfa.js (Location: server/src/dfa/orderDfa.js)")
-    p.paragraph_format.space_after = Pt(4)
+    add_justified_para(doc, "File Name: orderDfa.js (Location: server/src/dfa/orderDfa.js)", space_after=4)
 
     code_content = """export const STATES = Object.freeze({
   S0: 'Order Created',
@@ -497,9 +511,8 @@ export function transition(currentState, input) {
     set_cell_margins(cell, 140, 140, 160, 160)
     cell.text = code_content
     p = cell.paragraphs[0]
-    p.runs[0].font.name = 'Consolas'
-    p.runs[0].font.size = Pt(8.5)
-    p.runs[0].font.color.rgb = RGBColor(248, 250, 252)
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    format_run(p.runs[0], font_name="Consolas", font_size=9, bold=False, color_rgb=(248, 250, 252))
 
     doc.add_paragraph().paragraph_format.space_after = Pt(10)
 
@@ -536,11 +549,10 @@ export function transition(currentState, input) {
     set_cell_margins(cell, 140, 140, 160, 160)
     cell.text = out_content
     p = cell.paragraphs[0]
-    p.runs[0].font.name = 'Consolas'
-    p.runs[0].font.size = Pt(8.5)
-    p.runs[0].font.color.rgb = RGBColor(16, 185, 129)
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    format_run(p.runs[0], font_name="Consolas", font_size=9, bold=False, color_rgb=(16, 185, 129))
 
-    doc.add_paragraph().paragraph_format.space_after = Pt(10)
+    doc.add_paragraph().paragraph_format.space_after = Pt(8)
 
     # Embed visual screenshots if available
     img_dfa = os.path.abspath("docs/screenshots/05_dfa_visualizer.png")
@@ -554,9 +566,7 @@ export function transition(currentState, input) {
         p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_cap.paragraph_format.space_after = Pt(10)
         r = p_cap.add_run("Figure 3: Interactive DFA Visualizer and String Sequence Simulator web interface (/dfa).")
-        r.bold = True
-        r.font.size = Pt(9.5)
-        r.font.color.rgb = RGBColor(71, 85, 105)
+        format_run(r, font_name="Times New Roman", font_size=11, bold=True, italic=True, color_rgb=(71, 85, 105))
 
     img_rej = os.path.abspath("docs/screenshots/10_invalid_transition.png")
     if os.path.exists(img_rej):
@@ -569,11 +579,9 @@ export function transition(currentState, input) {
         p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_cap.paragraph_format.space_after = Pt(12)
         r = p_cap.add_run("Figure 4: Formal mathematical rejection proof (HTTP 422) when an illegal transition is attempted.")
-        r.bold = True
-        r.font.size = Pt(9.5)
-        r.font.color.rgb = RGBColor(71, 85, 105)
+        format_run(r, font_name="Times New Roman", font_size=11, bold=True, italic=True, color_rgb=(71, 85, 105))
 
-    # --- PROCEDURE STEPS ---
+    # --- PROCEDURE STEPS (Justified, Times New Roman, 12pt) ---
     add_sec_title("PROCEDURE STEPS :")
     steps = [
         "Start the MongoDB database service to make the database available for the application (or rely on the automated in-memory MongoDB fallback).",
@@ -594,15 +602,17 @@ export function transition(currentState, input) {
 
     for idx, step_text in enumerate(steps, 1):
         p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         p.paragraph_format.space_after = Pt(4)
         p.paragraph_format.left_indent = Inches(0.25)
         r_num = p.add_run(f"{idx}. ")
-        r_num.bold = True
-        p.add_run(step_text)
+        format_run(r_num, font_name="Times New Roman", font_size=12, bold=True)
+        r_txt = p.add_run(step_text)
+        format_run(r_txt, font_name="Times New Roman", font_size=12, bold=False)
 
     doc.add_paragraph().paragraph_format.space_after = Pt(10)
 
-    # --- ADVANTAGES ---
+    # --- ADVANTAGES (Justified, Times New Roman, 12pt) ---
     add_sec_title("ADVANTAGES OF USING FLAT CONCEPT IN ONLINE FOOD ORDERING AND DELIVERY TRACKING SYSTEM :")
     advantages = [
         ("Pattern Recognition: ", "Formally recognizes valid order processing workflows as regular languages over the operational alphabet Σ."),
@@ -615,13 +625,15 @@ export function transition(currentState, input) {
 
     for title, desc in advantages:
         p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         p.paragraph_format.space_after = Pt(4)
         p.paragraph_format.left_indent = Inches(0.25)
         r_bullet = p.add_run("• ")
-        r_bullet.bold = True
+        format_run(r_bullet, font_name="Times New Roman", font_size=12, bold=True)
         r_title = p.add_run(title)
-        r_title.bold = True
-        p.add_run(desc)
+        format_run(r_title, font_name="Times New Roman", font_size=12, bold=True)
+        r_desc = p.add_run(desc)
+        format_run(r_desc, font_name="Times New Roman", font_size=12, bold=False)
 
     # Save document
     out_path = os.path.abspath("FLAT_PROJECT_ASSESSMENT_REPORT.docx")
