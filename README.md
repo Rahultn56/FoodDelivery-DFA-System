@@ -12,6 +12,7 @@
 [![Socket.io](https://img.shields.io/badge/Socket.io-4.8-black.svg)](https://socket.io/)
 [![Automata](https://img.shields.io/badge/Automata-DFA%20M=(Q,Σ,δ,q0,F)-orange.svg)]()
 [![Tests](https://img.shields.io/badge/Unit%20Tests-7%20Passing-brightgreen.svg)]()
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FRahultn56%2FFoodDelivery-DFA-System)
 
 ---
 
