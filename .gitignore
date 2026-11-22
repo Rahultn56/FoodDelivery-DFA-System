@@ -8,3 +8,6 @@ frontend/.env
 .DS_Store
 reports/
 RAHUL-PROJECT1/
+*.docx
+*.doc
+*REPORT*
