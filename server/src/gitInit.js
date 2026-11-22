@@ -18,6 +18,8 @@ async function stageAndCommit() {
     'FSWD_PROJECT_ASSESSMENT_REPORT.md',
     'FLAT_PROJECT_ASSESSMENT_REPORT.html',
     'FLAT_PROJECT_ASSESSMENT_REPORT.md',
+    'FLAT_PROJECT_ASSESSMENT_REPORT.docx',
+    'generate_docx.py',
     'client/index.html',
     'client/package.json',
     'client/vite.config.js',
