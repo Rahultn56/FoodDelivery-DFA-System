@@ -16,6 +16,8 @@ async function stageAndCommit() {
     'api/index.js',
     'FSWD_PROJECT_ASSESSMENT_REPORT.html',
     'FSWD_PROJECT_ASSESSMENT_REPORT.md',
+    'FLAT_PROJECT_ASSESSMENT_REPORT.html',
+    'FLAT_PROJECT_ASSESSMENT_REPORT.md',
     'client/index.html',
     'client/package.json',
     'client/vite.config.js',
