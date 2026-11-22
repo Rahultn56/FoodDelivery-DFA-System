@@ -1,7 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "npm --prefix client install --no-fund --no-audit && npm --prefix client run build",
-  "outputDirectory": "client/dist",
   "rewrites": [
     {
       "source": "/api/(.*)",
