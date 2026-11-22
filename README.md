@@ -804,10 +804,40 @@ The **Online Food Ordering and Delivery Tracking System Using DFA** unites three
 
 ---
 
+## 19. Cloud Deployment (Vercel & MongoDB Atlas)
+
+This repository is pre-configured with `vercel.json` and a Serverless Function entry point in `api/index.js` for instant deployment on [Vercel](https://vercel.com).
+
+### Option A: One-Click Deploy via GitHub (Recommended)
+
+1. Log in to your [Vercel Dashboard](https://vercel.com).
+2. Click **Add New** $\to$ **Project**.
+3. Import your repository: `https://github.com/Rahultn56/FoodDelivery-DFA-System`.
+4. Configure Project Settings:
+   - **Framework Preset**: Vite
+   - **Root Directory**: `./` (leave default)
+   - **Build Command**: `npm --prefix client run build`
+   - **Output Directory**: `client/dist`
+5. **Environment Variables** (Optional for cloud MongoDB Atlas):
+   - `MONGODB_URI`: `mongodb+srv://<username>:<password>@cluster0.mongodb.net/food_delivery_dfa?retryWrites=true&w=majority`
+   - `JWT_SECRET`: `your_secure_random_jwt_secret_key`
+   - *(Note: If `MONGODB_URI` is omitted, the app runs in preview mode with full DFA visualization and sample food menu items).*
+6. Click **Deploy**. Your application will be live at `https://food-delivery-dfa-system.vercel.app`.
+
+### Option B: Deploy via Vercel CLI
+
+```bash
+npm install -g vercel
+vercel login
+vercel --prod
+```
+
+---
+
 ### Academic Certification
 
 - **Project Title**: Online Food Ordering and Delivery Tracking System Using DFA
 - **Integrated Subjects**: Computer Networks (CN), Formal Languages & Automata Theory (FLAT), Full Stack Web Development (FSWD)
 - **Automaton Model**: Deterministic Finite Automaton $M = (Q, \Sigma, \delta, q_0, F)$
 - **Test Status**: All 7 Automated Unit Tests Passing (`npm test`)
-- **Repository Location**: `c:\Users\gr777\Downloads\RAHUL-PROJECT1`
+- **GitHub Repository**: [https://github.com/Rahultn56/FoodDelivery-DFA-System](https://github.com/Rahultn56/FoodDelivery-DFA-System)

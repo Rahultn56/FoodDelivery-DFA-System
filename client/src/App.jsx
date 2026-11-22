@@ -713,9 +713,14 @@ function TrackingPage({ user, notify }) {
     if (!user) return;
     loadOrder();
 
-    // Connect WebSocket for live updates
-    const socketUrl = BASE_URL.replace('/api', '');
-    const socket = io(socketUrl, { auth: { token: getToken() } });
+    // Connect WebSocket for live updates (with polling fallback)
+    const socketUrl = BASE_URL.startsWith('http') ? BASE_URL.replace('/api', '') : (typeof window !== 'undefined' ? window.location.origin : '');
+    const socket = io(socketUrl, {
+      auth: { token: getToken() },
+      transports: ['polling', 'websocket'],
+      reconnectionAttempts: 3,
+      timeout: 4000
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -933,9 +938,13 @@ function AdminPage({ user, notify }) {
     if (user?.role !== 'admin') return;
     loadData();
 
-    // WebSocket for live order updates
-    const socketUrl = BASE_URL.replace('/api', '');
-    const socket = io(socketUrl);
+    // WebSocket for live order updates (with reconnection limits)
+    const socketUrl = BASE_URL.startsWith('http') ? BASE_URL.replace('/api', '') : (typeof window !== 'undefined' ? window.location.origin : '');
+    const socket = io(socketUrl, {
+      transports: ['polling', 'websocket'],
+      reconnectionAttempts: 3,
+      timeout: 4000
+    });
     socketRef.current = socket;
     socket.on('connect', () => socket.emit('join:admin'));
     socket.on('admin:new_order', () => { loadData(); notify('🔔 New order received!', 'info'); });

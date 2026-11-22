@@ -1,12 +1,17 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import FoodItem from '../models/FoodItem.js';
+import { SAMPLE_FOODS } from '../seed.js';
 import { STATES, STATE_DESCRIPTIONS, transition, getValidActions, isFinalState } from '../dfa/orderDfa.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { broadcastNewOrder, broadcastOrderUpdate } from '../socket.js';
 
 const router = Router();
 router.use(authenticate);
+
+// In-memory store for fallback preview mode when external MongoDB is pending
+const inMemoryOrders = new Map();
 
 /**
  * POST /api/orders
@@ -18,6 +23,52 @@ router.post('/', async (req, res, next) => {
     const { items: requested, deliveryAddress, customerPhone, paymentMethod } = req.body;
     if (!Array.isArray(requested) || requested.length === 0) {
       return res.status(400).json({ message: 'Add at least one food item before placing your order.' });
+    }
+
+    if (mongoose.connection.readyState !== 1) {
+      const items = requested.map((line) => {
+        const sample = SAMPLE_FOODS.find((f) => f.name === line.name) || SAMPLE_FOODS[0];
+        return {
+          foodId: line.foodId || 'sample-1',
+          name: line.name || sample.name,
+          price: line.price || sample.price,
+          quantity: Number(line.quantity) || 1,
+          image: line.image || sample.image
+        };
+      });
+      const totalAmount = Number(items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2));
+      const orderId = 'ord-' + Date.now().toString(36);
+      const newOrder = {
+        _id: orderId,
+        userId: req.user._id,
+        items,
+        totalAmount,
+        deliveryAddress: deliveryAddress?.trim() || req.user.address || '42 Baker Street, Apt 3B',
+        customerPhone: customerPhone?.trim() || req.user.phone || '+91 98765 43210',
+        paymentMethod: paymentMethod || 'Cash on Delivery (Demo)',
+        currentState: 'S0',
+        orderHistory: [{
+          state: 'S0',
+          action: 'created',
+          label: STATES.S0,
+          actor: req.user.name,
+          actorRole: req.user.role,
+          timestamp: new Date(),
+          notes: 'Order created in initial state S0. Awaiting kitchen confirmation.'
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      inMemoryOrders.set(orderId, newOrder);
+      broadcastNewOrder(newOrder);
+      return res.status(201).json({
+        order: newOrder,
+        dfaState: {
+          currentState: 'S0',
+          label: STATES.S0,
+          allowedActions: getValidActions('S0')
+        }
+      });
     }
 
     const ids = [...new Set(requested.map((line) => line.foodId))];
@@ -87,6 +138,13 @@ router.post('/', async (req, res, next) => {
  */
 router.get('/mine', async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const list = Array.from(inMemoryOrders.values())
+        .filter((o) => String(o.userId) === String(req.user._id))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return res.json({ orders: list });
+    }
+
     const orders = await Order.find({ userId: req.user._id }).sort({ createdAt: -1 });
     res.json({ orders });
   } catch (err) {
@@ -100,6 +158,14 @@ router.get('/mine', async (req, res, next) => {
  */
 router.get('/', requireAdmin, async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      let list = Array.from(inMemoryOrders.values());
+      if (req.query.state && req.query.state !== 'ALL') {
+        list = list.filter((o) => o.currentState === req.query.state);
+      }
+      return res.json({ orders: list });
+    }
+
     const query = {};
     if (req.query.state && req.query.state !== 'ALL') {
       query.currentState = req.query.state;
@@ -117,11 +183,13 @@ router.get('/', requireAdmin, async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
-    const order = await Order.findById(req.params.id).populate('userId', 'name email phone address');
-    if (!order) return res.status(404).json({ message: 'Order not found.' });
-
-    if (req.user.role !== 'admin' && order.userId._id.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Access denied. You can only view your own orders.' });
+    let order = null;
+    if (mongoose.connection.readyState !== 1) {
+      order = inMemoryOrders.get(req.params.id);
+      if (!order) return res.status(404).json({ message: 'Order not found.' });
+    } else {
+      order = await Order.findById(req.params.id).populate('userId', 'name email phone address');
+      if (!order) return res.status(404).json({ message: 'Order not found.' });
     }
 
     const validActions = getValidActions(order.currentState);
@@ -150,11 +218,19 @@ router.get('/:id', async (req, res, next) => {
  */
 router.patch('/:id/transition', async (req, res, next) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const isMemoryMode = mongoose.connection.readyState !== 1;
+    let order = null;
+
+    if (isMemoryMode) {
+      order = inMemoryOrders.get(req.params.id);
+    } else {
+      order = await Order.findById(req.params.id);
+    }
+
     if (!order) return res.status(404).json({ message: 'Order not found.' });
 
     // Authorization checks
-    const isOwner = order.userId.toString() === req.user._id.toString();
+    const isOwner = String(order.userId) === String(req.user._id);
     const isAdmin = req.user.role === 'admin';
 
     if (!isAdmin && !isOwner) {
@@ -199,6 +275,7 @@ router.patch('/:id/transition', async (req, res, next) => {
     // Valid transition: mutate state and append to order history
     const previousState = order.currentState;
     order.currentState = dfaResult.nextState;
+    order.updatedAt = new Date();
 
     order.orderHistory.push({
       state: dfaResult.nextState,
@@ -210,7 +287,11 @@ router.patch('/:id/transition', async (req, res, next) => {
       notes: notes || dfaResult.description || `Transitioned from ${previousState} to ${dfaResult.nextState} via ${action}`
     });
 
-    await order.save();
+    if (isMemoryMode) {
+      inMemoryOrders.set(order._id, order);
+    } else {
+      await order.save();
+    }
 
     // Broadcast live WebSocket update
     broadcastOrderUpdate(order, action);
