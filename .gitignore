@@ -1,10 +1,10 @@
 node_modules/
-client/node_modules/
-server/node_modules/
-client/dist/
+frontend/node_modules/
+backend/node_modules/
+frontend/dist/
 .env
-server/.env
-client/.env
+backend/.env
+frontend/.env
 .DS_Store
 reports/
 RAHUL-PROJECT1/

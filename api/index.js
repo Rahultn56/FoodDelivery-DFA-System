@@ -1,6 +1,6 @@
-import app from '../server/src/app.js';
-import { connectDatabase } from '../server/src/db.js';
-import { seedData } from '../server/src/seed.js';
+import app from '../backend/src/app.js';
+import { connectDatabase } from '../backend/src/db.js';
+import { seedData } from '../backend/src/seed.js';
 
 let isDbInitialized = false;
 

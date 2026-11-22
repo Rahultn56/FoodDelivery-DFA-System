@@ -632,21 +632,21 @@ Content-Type: application/json
    cd c:\Users\gr777\Downloads\RAHUL-PROJECT1
    ```
 
-2. **Install Root, Server, and Client Dependencies**:
+2. **Install Root, Backend, and Frontend Dependencies**:
    ```bash
    npm run install:all
    ```
-   *(Or individually: `npm install`, `cd server && npm install`, `cd ../client && npm install`)*
+   *(Or individually: `npm install`, `cd backend && npm install`, `cd ../frontend && npm install`)*
 
 3. **Configure Environment Variables**:
    Copy the example environment files if they do not exist:
    ```bash
    # Windows PowerShell
-   Copy-Item server/.env.example server/.env -Force
-   Copy-Item client/.env.example client/.env -Force
+   Copy-Item backend/.env.example backend/.env -Force
+   Copy-Item frontend/.env.example frontend/.env -Force
    ```
 
-   The default `server/.env` comes pre-configured with:
+   The default `backend/.env` comes pre-configured with:
    ```env
    PORT=4000
    MONGODB_URI=mongodb://127.0.0.1:27017/food_delivery_dfa
@@ -798,7 +798,7 @@ The **Online Food Ordering and Delivery Tracking System Using DFA** unites three
 > 2. **WebSockets via Socket.io**: For real-time updates. The client and server maintain a persistent, bidirectional TCP connection, allowing the server to push order changes immediately without repeated polling.
 
 #### Q5: What happens when an invalid transition is attempted?
-> **Answer**: The backend `transition(currentState, input)` function in `server/src/dfa/orderDfa.js` checks the transition matrix. If undefined, it returns `{ valid: false, error, allowedActions }`. The route controller returns an **HTTP 422 Unprocessable Entity** response with the exact reason and allowed actions, leaving the database completely unmodified.
+> **Answer**: The backend `transition(currentState, input)` function in `backend/src/dfa/orderDfa.js` checks the transition matrix. If undefined, it returns `{ valid: false, error, allowedActions }`. The route controller returns an **HTTP 422 Unprocessable Entity** response with the exact reason and allowed actions, leaving the database completely unmodified.
 
 #### Q6: How is user authentication and role authorization handled?
 > **Answer**: Upon login (`POST /api/auth/login`), the server verifies the password using `bcrypt.compare()` against the stored hash. If valid, it signs a JWT containing the user ID and role (`customer` or `admin`). On subsequent requests, the `authenticate` middleware verifies the JWT bearer token, and `requireAdmin` restricts kitchen progression endpoints to restaurant staff.
@@ -817,8 +817,8 @@ This repository is pre-configured with `vercel.json` and a Serverless Function e
 4. Configure Project Settings:
    - **Framework Preset**: Vite
    - **Root Directory**: `./` (leave default)
-   - **Build Command**: `npm --prefix client run build`
-   - **Output Directory**: `client/dist`
+   - **Build Command**: `cd frontend && npm install && npm run build`
+   - **Output Directory**: `frontend/dist`
 5. **Environment Variables** (Optional for cloud MongoDB Atlas):
    - `MONGODB_URI`: `mongodb+srv://<username>:<password>@cluster0.mongodb.net/food_delivery_dfa?retryWrites=true&w=majority`
    - `JWT_SECRET`: `your_secure_random_jwt_secret_key`

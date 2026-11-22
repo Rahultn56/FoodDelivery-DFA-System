@@ -5,15 +5,15 @@
   "type": "module",
   "description": "Online Food Ordering and Delivery Tracking System with DFA Order Validation",
   "workspaces": [
-    "client"
+    "frontend"
   ],
   "scripts": {
-    "build": "cd client && npm install && npm run build",
-    "dev": "concurrently -k -n server,client -c green,cyan \"npm:dev:server\" \"npm:dev:client\"",
-    "dev:server": "npm --prefix server run dev",
-    "dev:client": "npm --prefix client run dev",
-    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
-    "test": "npm --prefix server test"
+    "build": "cd frontend && npm install && npm run build",
+    "dev": "concurrently -k -n backend,frontend -c green,cyan \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --prefix backend run dev",
+    "dev:client": "npm --prefix frontend run dev",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "test": "npm --prefix backend test"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

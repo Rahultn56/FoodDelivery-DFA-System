@@ -5,33 +5,10 @@ import path from 'path';
 const rootDir = path.resolve('.');
 
 async function cleanAndCommit() {
-  console.log('Staging and cleaning Git repository:', rootDir);
+  console.log('Staging and restructuring Git repository:', rootDir);
 
-  const filesToRemove = [
-    'FSWD_PROJECT_ASSESSMENT_REPORT.html',
-    'FSWD_PROJECT_ASSESSMENT_REPORT.md',
-    'FLAT_PROJECT_ASSESSMENT_REPORT.html',
-    'FLAT_PROJECT_ASSESSMENT_REPORT.md',
-    'FLAT_PROJECT_ASSESSMENT_REPORT.docx',
-    'generate_docx.py'
-  ];
-
-  for (const filepath of filesToRemove) {
-    try {
-      await git.remove({ fs, dir: rootDir, filepath });
-      console.log('Removed from Git index:', filepath);
-    } catch (e) {
-      // Ignore if already not in index
-    }
-  }
-
-  const filesToAdd = [
-    'package.json',
-    'package-lock.json',
-    'README.md',
-    '.gitignore',
-    'vercel.json',
-    'api/index.js',
+  // List old files from client and server to remove from Git index
+  const oldFilesToRemove = [
     'client/index.html',
     'client/package.json',
     'client/vite.config.js',
@@ -61,7 +38,52 @@ async function cleanAndCommit() {
     'server/src/routes/networkInfo.js',
     'server/src/middleware/auth.js',
     'server/src/middleware/errors.js',
-    'server/test/orderDfa.test.js',
+    'server/test/orderDfa.test.js'
+  ];
+
+  for (const filepath of oldFilesToRemove) {
+    try {
+      await git.remove({ fs, dir: rootDir, filepath });
+    } catch (_) {}
+  }
+
+  const filesToAdd = [
+    'package.json',
+    'package-lock.json',
+    'README.md',
+    '.gitignore',
+    'vercel.json',
+    'api/index.js',
+    'frontend/index.html',
+    'frontend/package.json',
+    'frontend/vite.config.js',
+    'frontend/vercel.json',
+    'frontend/.env.example',
+    'frontend/src/main.jsx',
+    'frontend/src/App.jsx',
+    'frontend/src/api.js',
+    'frontend/src/styles.css',
+    'backend/package.json',
+    'backend/.env.example',
+    'backend/src/index.js',
+    'backend/src/app.js',
+    'backend/src/db.js',
+    'backend/src/seed.js',
+    'backend/src/socket.js',
+    'backend/src/gitInit.js',
+    'backend/src/gitPush.js',
+    'backend/src/dfa/orderDfa.js',
+    'backend/src/models/User.js',
+    'backend/src/models/FoodItem.js',
+    'backend/src/models/Order.js',
+    'backend/src/routes/auth.js',
+    'backend/src/routes/foods.js',
+    'backend/src/routes/orders.js',
+    'backend/src/routes/dfa.js',
+    'backend/src/routes/networkInfo.js',
+    'backend/src/middleware/auth.js',
+    'backend/src/middleware/errors.js',
+    'backend/test/orderDfa.test.js',
     'docs/CN-FLAT-FSWD.md',
     'docs/TESTING.md',
     'docs/screenshots/01_home_menu.png',
@@ -86,7 +108,7 @@ async function cleanAndCommit() {
   const sha = await git.commit({
     fs,
     dir: rootDir,
-    message: 'Remove assessment report files from root; keep only frontend and backend codebase',
+    message: 'Restructure codebase to standard frontend and backend directories',
     author: {
       name: 'Rahul G',
       email: 'rahul.g@example.com'
