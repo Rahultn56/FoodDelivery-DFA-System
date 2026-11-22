@@ -4,8 +4,26 @@ import path from 'path';
 
 const rootDir = path.resolve('.');
 
-async function stageAndCommit() {
-  console.log('Staging files in Git repository:', rootDir);
+async function cleanAndCommit() {
+  console.log('Staging and cleaning Git repository:', rootDir);
+
+  const filesToRemove = [
+    'FSWD_PROJECT_ASSESSMENT_REPORT.html',
+    'FSWD_PROJECT_ASSESSMENT_REPORT.md',
+    'FLAT_PROJECT_ASSESSMENT_REPORT.html',
+    'FLAT_PROJECT_ASSESSMENT_REPORT.md',
+    'FLAT_PROJECT_ASSESSMENT_REPORT.docx',
+    'generate_docx.py'
+  ];
+
+  for (const filepath of filesToRemove) {
+    try {
+      await git.remove({ fs, dir: rootDir, filepath });
+      console.log('Removed from Git index:', filepath);
+    } catch (e) {
+      // Ignore if already not in index
+    }
+  }
 
   const filesToAdd = [
     'package.json',
@@ -14,12 +32,6 @@ async function stageAndCommit() {
     '.gitignore',
     'vercel.json',
     'api/index.js',
-    'FSWD_PROJECT_ASSESSMENT_REPORT.html',
-    'FSWD_PROJECT_ASSESSMENT_REPORT.md',
-    'FLAT_PROJECT_ASSESSMENT_REPORT.html',
-    'FLAT_PROJECT_ASSESSMENT_REPORT.md',
-    'FLAT_PROJECT_ASSESSMENT_REPORT.docx',
-    'generate_docx.py',
     'client/index.html',
     'client/package.json',
     'client/vite.config.js',
@@ -74,7 +86,7 @@ async function stageAndCommit() {
   const sha = await git.commit({
     fs,
     dir: rootDir,
-    message: 'Add Vercel deployment configuration, serverless API handler, and fallback resilience',
+    message: 'Remove assessment report files from root; keep only frontend and backend codebase',
     author: {
       name: 'Rahul G',
       email: 'rahul.g@example.com'
@@ -84,4 +96,4 @@ async function stageAndCommit() {
   console.log('✅ Committed successfully with SHA:', sha);
 }
 
-stageAndCommit().catch(console.error);
+cleanAndCommit().catch(console.error);
