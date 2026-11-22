@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Online Food Ordering and Delivery Tracking System with DFA Order Validation",
+  "workspaces": [
+    "client"
+  ],
   "scripts": {
     "build": "cd client && npm install && npm run build",
     "dev": "concurrently -k -n server,client -c green,cyan \"npm:dev:server\" \"npm:dev:client\"",
